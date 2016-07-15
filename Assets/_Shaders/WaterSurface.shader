@@ -45,6 +45,7 @@
 		float2 uv_MainTex;
 	};
 
+	/*
 	//The wave function
 	float3 getWavePos(float3 pos)
 	{
@@ -59,9 +60,12 @@
 
 		return pos;
 	}
+	*/
 
+	
 	void vert(inout appdata_full IN)
 	{
+		/*
 		//Get the global position of the vertice
 		float4 worldPos = mul(_Object2World, IN.vertex);
 
@@ -73,13 +77,16 @@
 
 		//Assign the modified vertice
 		IN.vertex = localPos;
+		*/
 	}
+	
 
 	void surf(Input IN, inout SurfaceOutputStandard o)
 	{
 		//Albedo comes from a texture tinted by color
 		fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
-		o.Albedo = c.rgb;
+		//o.Albedo = c.rgb;
+		o.Albedo = float4(1.0f, IN.uv_MainTex, 1.0f);
 		//Metallic and smoothness come from slider variables
 		o.Metallic = _Metallic;
 		o.Smoothness = _Glossiness;
@@ -88,5 +95,5 @@
 
 	ENDCG
 	}
-		FallBack "Diffuse"
+		//FallBack "Diffuse"
 }

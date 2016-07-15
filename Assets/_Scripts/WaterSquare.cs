@@ -17,8 +17,6 @@ public class WaterSquare
     //The total number of vertices we need to generate based on size and spacing
     private int m_width;
 
-    //For the thread to update the water
-    //The local center position of this square to fake transformpoint in a thread
     public Vector3 m_centerPos;
     //The latest vertices that belong to this square
     public Vector3[] m_vertices;
@@ -48,7 +46,6 @@ public class WaterSquare
         //Save the center position of the square
         this.m_centerPos = waterSquareObj.transform.localPosition;
 
-
         //Generate the sea
         //To calculate the time it took to generate the terrain
         float startTime = System.Environment.TickCount;
@@ -59,7 +56,6 @@ public class WaterSquare
         float timeToGenerateSea = (System.Environment.TickCount - startTime) / 1000f;
 
         Debug.Log("Sea was generated in " + timeToGenerateSea.ToString() + " seconds");
-
 
         //Save the vertices so we can update them in a thread
         this.m_vertices = m_terrainMeshFilter.mesh.vertices;

@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 
 //Creates an endless water system with squares
 public class EndlessWaterSquare : MonoBehaviour
@@ -38,22 +37,13 @@ public class EndlessWaterSquare : MonoBehaviour
         CreateEndlessSea();
 
         //Init the time
-        m_secondsSinceStart = Time.time;
-
-        //Update the water in the thread
-        //ThreadPool.QueueUserWorkItem(new WaitCallback(UpdateWaterWithThreadPooling));
-
-        //Start the coroutine
-        //StartCoroutine(UpdateWater());
+        m_secondsSinceStart = Time.time;        
     }
 
     void Update()
     {
-        UpdateWaterNoThread();
-
-        //Update these as often as possible because we don't know when the thread will run because of pooling
-        //and we always need the latest version
-
+        UpdateWater();
+        
         //Update the time since start to get correct wave height which depends on time since start
         m_secondsSinceStart = Time.time;
 
@@ -61,8 +51,8 @@ public class EndlessWaterSquare : MonoBehaviour
         m_boatPos = m_boatObj.transform.position;
     }
 
-    //Update the water with no thread to compare 
-    void UpdateWaterNoThread()
+    //Update the water 
+    void UpdateWater()
     {
         //Update the position of the boat
         m_boatPos = m_boatObj.transform.position;
@@ -78,76 +68,6 @@ public class EndlessWaterSquare : MonoBehaviour
         {
             m_waterSquares[i].MoveSea(m_oceanPos, Time.time);
         }
-    }
-
-
-    //The loop that gives the updated vertices from the thread to the meshes
-    //which we can't do in its own thread
-    IEnumerator UpdateWater()
-    {
-        while (true)
-        {
-            //Has the thread finished updating the water?
-            if (m_hasThreadUpdatedWater)
-            {
-                //Move the water to the boat
-                transform.position = m_oceanPos;
-
-                //Add the updated vertices to the water meshes
-                for (int i = 0; i < m_waterSquares.Count; i++)
-                {
-                    m_waterSquares[i].m_terrainMeshFilter.mesh.vertices = m_waterSquares[i].m_vertices;
-
-                    m_waterSquares[i].m_terrainMeshFilter.mesh.RecalculateNormals();
-                }
-
-                //Stop looping until we have updated the water in the thread
-                m_hasThreadUpdatedWater = false;
-
-                //Update the water in the thread
-                ThreadPool.QueueUserWorkItem(new WaitCallback(UpdateWaterWithThreadPooling));
-            }
-
-            //Don't need to update the water every frame
-            yield return new WaitForSeconds(Time.deltaTime * 3f);
-        }
-    }
-
-    //The thread that updates the water vertices
-    void UpdateWaterWithThreadPooling(object state)
-    {
-        //Move the water to the boat
-        MoveWaterToBoat();
-
-        //Loop through all water squares
-        for (int i = 0; i < m_waterSquares.Count; i++)
-        {
-            //The local center pos of this square
-            Vector3 centerPos = m_waterSquares[i].m_centerPos;
-            //All the vertices this square consists of
-            Vector3[] vertices = m_waterSquares[i].m_vertices;
-
-            //Update the vertices in this square
-            for (int j = 0; j < vertices.Length; j++)
-            {
-                //The local position of the vertex
-                Vector3 vertexPos = vertices[j];
-
-                //Can't use transformpoint in a thread, so to find the global position of the vertex
-                //we just add the position of the ocean and the square because rotation and scale is always 0 and 1
-                Vector3 vertexPosGlobal = vertexPos + centerPos + m_oceanPos;
-
-                //Get the water height
-                vertexPos.y = WaterController.current.GetWaveYPos(vertexPosGlobal, m_secondsSinceStart);
-
-                //Save the new y coordinate, but x and z are still in local position
-                vertices[j] = vertexPos;
-            }
-        }
-
-        m_hasThreadUpdatedWater = true;
-
-        //Debug.Log("Thread finished");
     }
 
     //Move the endless water to the boat's position in steps that's the same as the water's resolution

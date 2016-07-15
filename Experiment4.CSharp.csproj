@@ -73,7 +73,7 @@
     <Compile Include="Assets\_Scripts\WaveTypes.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\_Shaders\StandardSurfaceShader.shader" />
+    <None Include="Assets\_Shaders\TestShader.shader" />
     <None Include="Assets\_Shaders\WaterSurface.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
