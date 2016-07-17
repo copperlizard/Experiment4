@@ -4,102 +4,204 @@ using System.Collections.Generic;
 
 namespace BoatSpace
 {
+    //Main controller for all boat physics
     public class BoatPhysics : MonoBehaviour
     {
         //Drags
+        public GameObject m_boatMeshObj;
         public GameObject m_underWaterObj;
+        public GameObject m_aboveWaterObj;
+
+        //Change the center of mass
+        public Vector3 m_centerOfMass;
 
         //Script that's doing everything needed with the boat mesh, such as finding out which part is above the water
         private ModifyBoatMesh m_modifyBoatMesh;
 
-        //Mesh for debugging
+        //Meshes for debugging
         private Mesh m_underWaterMesh;
+        private Mesh m_aboveWaterMesh;
 
-        //The boat's rigidbody
+        //The boats rigidbody
         private Rigidbody m_boatRB;
 
         //The density of the water the boat is traveling in
-        private float m_rhoWater = 1027f;
+        private float m_rhoWater = BoatPhysicsMath.m_RHO_OCEAN_WATER;
+        private float m_rhoAir = BoatPhysicsMath.m_RHO_AIR;
+
+        void Awake()
+        {
+            m_boatRB = this.GetComponent<Rigidbody>();
+        }
 
         void Start()
         {
-            //Get the boat's rigidbody
-            m_boatRB = gameObject.GetComponent<Rigidbody>();
-
             //Init the script that will modify the boat mesh
-            m_modifyBoatMesh = new ModifyBoatMesh(gameObject);
+            m_modifyBoatMesh = new ModifyBoatMesh(m_boatMeshObj, m_underWaterObj, m_aboveWaterObj, m_boatRB);
 
             //Meshes that are below and above the water
             m_underWaterMesh = m_underWaterObj.GetComponent<MeshFilter>().mesh;
+            m_aboveWaterMesh = m_aboveWaterObj.GetComponent<MeshFilter>().mesh;
         }
 
         void Update()
         {
-            //Generate the under water mesh
+            //Generate the under water and above water meshes
             m_modifyBoatMesh.GenerateUnderwaterMesh();
 
-            //Display the under water mesh
+            //Display the under water mesh - is always needed to get the underwater length for forces calculations
             m_modifyBoatMesh.DisplayMesh(m_underWaterMesh, "UnderWater Mesh", m_modifyBoatMesh.m_underWaterTriangleData);
+
+            //Display the above water mesh
+            m_modifyBoatMesh.DisplayMesh(m_aboveWaterMesh, "AboveWater Mesh", m_modifyBoatMesh.m_aboveWaterTriangleData);
         }
 
         void FixedUpdate()
         {
+            //Change the center of mass - experimental - move to Start() later
+            m_boatRB.centerOfMass = m_centerOfMass;
+
             //Add forces to the part of the boat that's below the water
             if (m_modifyBoatMesh.m_underWaterTriangleData.Count > 0)
             {
                 AddUnderWaterForces();
+            }
+
+            //Add forces to the part of the boat that's above the water
+            if (m_modifyBoatMesh.m_aboveWaterTriangleData.Count > 0)
+            {
+                AddAboveWaterForces();
             }
         }
 
         //Add all forces that act on the squares below the water
         void AddUnderWaterForces()
         {
+            //The resistance coefficient - same for all triangles
+            float Cf = BoatPhysicsMath.ResistanceCoefficient(
+                m_rhoWater,
+                m_boatRB.velocity.magnitude,
+                m_modifyBoatMesh.CalculateUnderWaterLength());
+
+            //To calculate the slamming force we need the velocity at each of the original triangles
+            List<SlammingForceData> slammingForceData = m_modifyBoatMesh.m_slammingForceData;
+
+            CalculateSlammingVelocities(slammingForceData);
+
+            //Need this data for slamming forces
+            float boatArea = m_modifyBoatMesh.m_boatArea;
+            float boatMass = m_boatRB.mass; //Replace this line with your boat's total mass
+
+            //To connect the submerged triangles with the original triangles
+            List<int> indexOfOriginalTriangle = m_modifyBoatMesh.m_indexOfOriginalTriangle;
+
             //Get all triangles
             List<TriangleData> underWaterTriangleData = m_modifyBoatMesh.m_underWaterTriangleData;
 
             for (int i = 0; i < underWaterTriangleData.Count; i++)
             {
-                //This triangle
                 TriangleData triangleData = underWaterTriangleData[i];
 
-                //Calculate the buoyancy force
-                Vector3 buoyancyForce = BuoyancyForce(m_rhoWater, triangleData);
+                //Calculate the forces
+                Vector3 forceToAdd = Vector3.zero;
 
-                //Add the force to the boat
-                m_boatRB.AddForceAtPosition(buoyancyForce, triangleData.center);
+                //Force 1 - The hydrostatic force (buoyancy)
+                forceToAdd += BoatPhysicsMath.BuoyancyForce(m_rhoWater, triangleData);
+
+                //Force 2 - Viscous Water Resistance
+                forceToAdd += BoatPhysicsMath.ViscousWaterResistanceForce(m_rhoWater, triangleData, Cf);
+
+                //Force 3 - Pressure drag
+                forceToAdd += BoatPhysicsMath.PressureDragForce(triangleData);
+
+                //Force 4 - Slamming force
+                //Which of the original triangles is this triangle a part of
+                int originalTriangleIndex = indexOfOriginalTriangle[i];
+
+                SlammingForceData slammingData = slammingForceData[originalTriangleIndex];
+
+                forceToAdd += BoatPhysicsMath.SlammingForce(slammingData, triangleData, boatArea, boatMass);
+
+                //Add the forces to the boat
+                m_boatRB.AddForceAtPosition(forceToAdd, triangleData.center);
 
 
                 //Debug
 
                 //Normal
-                Debug.DrawRay(triangleData.center, triangleData.normal * 3f, Color.white);
+                //Debug.DrawRay(triangleData.center, triangleData.normal * 3f, Color.white);
 
                 //Buoyancy
-                Debug.DrawRay(triangleData.center, buoyancyForce.normalized * -3f, Color.blue);
+                //Debug.DrawRay(triangleData.center, BoatPhysicsMath.BuoyancyForce(rhoWater, triangleData).normalized * -3f, Color.blue);
+
+                //Velocity
+                //Debug.DrawRay(triangleCenter, triangleVelocityDir * 3f, Color.black);
+
+                //Viscous Water Resistance
+                //Debug.DrawRay(triangleCenter, viscousWaterResistanceForce.normalized * 3f, Color.black);
             }
         }
 
-        //The buoyancy force so the boat can float
-        private Vector3 BuoyancyForce(float rho, TriangleData triangleData)
+
+
+        //Add all forces that act on the squares above the water
+        void AddAboveWaterForces()
         {
-            //Buoyancy is a hydrostatic force - it's there even if the water isn't flowing or if the boat stays still
+            //Get all triangles
+            List<TriangleData> aboveWaterTriangleData = m_modifyBoatMesh.m_aboveWaterTriangleData;
 
-            // F_buoyancy = rho * g * V
-            // rho - density of the mediaum you are in
-            // g - gravity
-            // V - volume of fluid directly above the curved surface 
+            //Loop through all triangles
+            for (int i = 0; i < aboveWaterTriangleData.Count; i++)
+            {
+                TriangleData triangleData = aboveWaterTriangleData[i];
 
-            // V = z * S * n 
-            // z - distance to surface
-            // S - surface area
-            // n - normal to the surface
-            Vector3 buoyancyForce = rho * Physics.gravity.y * triangleData.distanceToSurface * triangleData.area * triangleData.normal;
 
-            //The vertical component of the hydrostatic forces don't cancel out but the horizontal do
-            buoyancyForce.x = 0f;
-            buoyancyForce.z = 0f;
+                //Calculate the forces
+                Vector3 forceToAdd = Vector3.zero;
 
-            return buoyancyForce;
+                //Force 1 - Air resistance 
+                //Replace VisbyData.C_r with your boat's drag coefficient
+                forceToAdd += BoatPhysicsMath.AirResistanceForce(m_rhoAir, triangleData, DebugPhysics.current.C_r);
+
+                //Add the forces to the boat
+                m_boatRB.AddForceAtPosition(forceToAdd, triangleData.center);
+
+
+                //Debug
+
+                //The normal
+                //Debug.DrawRay(triangleCenter, triangleNormal * 3f, Color.white);
+
+                //The velocity
+                //Debug.DrawRay(triangleCenter, triangleVelocityDir * 3f, Color.black);
+
+                if (triangleData.cosTheta > 0f)
+                {
+                    //Debug.DrawRay(triangleCenter, triangleVelocityDir * 3f, Color.black);
+                }
+
+                //Air resistance
+                //-3 to show it in the opposite direction to see what's going on
+                //Debug.DrawRay(triangleCenter, airResistanceForce.normalized * -3f, Color.blue);
+            }
+        }
+
+
+
+        //Calculate the current velocity at the center of each triangle of the original boat mesh
+        private void CalculateSlammingVelocities(List<SlammingForceData> slammingForceData)
+        {
+            for (int i = 0; i < slammingForceData.Count; i++)
+            {
+                //Set the new velocity to the old velocity
+                slammingForceData[i].previousVelocity = slammingForceData[i].velocity;
+
+                //Center of the triangle in world space
+                Vector3 center = transform.TransformPoint(slammingForceData[i].triangleCenter);
+
+                //Get the current velocity at the center of the triangle
+                slammingForceData[i].velocity = BoatPhysicsMath.GetTriangleVelocity(m_boatRB, center);
+            }
         }
     }
 }

@@ -64,9 +64,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\_Scripts\BoatPhysics.cs" />
+    <Compile Include="Assets\_Scripts\BoatPhysicsMath.cs" />
+    <Compile Include="Assets\_Scripts\DebugPhysics.cs" />
     <Compile Include="Assets\_Scripts\EndlessWaterSquare.cs" />
     <Compile Include="Assets\_Scripts\ModifyBoatMesh.cs" />
     <Compile Include="Assets\_Scripts\OrbitCam.cs" />
+    <Compile Include="Assets\_Scripts\SlammingForceData.cs" />
     <Compile Include="Assets\_Scripts\TriangleData.cs" />
     <Compile Include="Assets\_Scripts\WaterController.cs" />
     <Compile Include="Assets\_Scripts\WaterSquare.cs" />

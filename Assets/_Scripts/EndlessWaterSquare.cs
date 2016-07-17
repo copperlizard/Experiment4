@@ -62,12 +62,13 @@ public class EndlessWaterSquare : MonoBehaviour
 
         //Add the new position of the ocean to this transform
         transform.position = m_oceanPos;
-
+        
         //Update the vertices
         for (int i = 0; i < m_waterSquares.Count; i++)
         {
             m_waterSquares[i].MoveSea(m_oceanPos, Time.time);
         }
+        
     }
 
     //Move the endless water to the boat's position in steps that's the same as the water's resolution
@@ -81,7 +82,6 @@ public class EndlessWaterSquare : MonoBehaviour
         if (m_oceanPos.x != x || m_oceanPos.z != z)
         {
             //Debug.Log("Moved sea");
-
             m_oceanPos = new Vector3(x, m_oceanPos.y, z);
         }
     }
@@ -90,7 +90,7 @@ public class EndlessWaterSquare : MonoBehaviour
     void CreateEndlessSea()
     {
         //The center piece
-        AddWaterPlane(0f, 0f, 0f, m_squareWidth, m_innerSquareResolution);
+        AddWaterPlane(0f, 0f, 0.0f, m_squareWidth, m_innerSquareResolution);
 
         //The 8 squares around the center square
         for (int x = -1; x <= 1; x += 1)
@@ -104,7 +104,7 @@ public class EndlessWaterSquare : MonoBehaviour
                 }
 
                 //The y-Pos should be lower than the square with high resolution to avoid an ugly seam
-                float yPos = -1.0f;
+                float yPos = -200.0f;
                 AddWaterPlane(x * m_squareWidth, z * m_squareWidth, yPos, m_squareWidth, m_outerSquareResolution);
             }
         }
@@ -113,19 +113,18 @@ public class EndlessWaterSquare : MonoBehaviour
     //Add one water plane
     void AddWaterPlane(float xCoord, float zCoord, float yPos, float squareWidth, float spacing)
     {
-        GameObject waterPlane = Instantiate(m_waterSqrObj, transform.position, transform.rotation) as GameObject;
-
-        waterPlane.SetActive(true);
-
-        //Change its position
+        //ocean center
         Vector3 centerPos = transform.position;
 
+        //Patch coords relative to ocean
         centerPos.x += xCoord;
         centerPos.y = yPos;
         centerPos.z += zCoord;
 
-        waterPlane.transform.position = centerPos;
+        GameObject waterPlane = Instantiate(m_waterSqrObj, centerPos, transform.rotation) as GameObject;
 
+        waterPlane.SetActive(true);        
+                
         //Parent it
         waterPlane.transform.parent = transform;
 

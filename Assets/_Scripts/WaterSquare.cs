@@ -53,14 +53,15 @@ public class WaterSquare
         GenerateMesh();
 
         //Calculate the time it took to generate the terrain in seconds
-        float timeToGenerateSea = (System.Environment.TickCount - startTime) / 1000f;
+        //float timeToGenerateSea = (System.Environment.TickCount - startTime) / 1000f;
 
-        Debug.Log("Sea was generated in " + timeToGenerateSea.ToString() + " seconds");
+        //Debug.Log("Sea was generated in " + timeToGenerateSea.ToString() + " seconds");
 
         //Save the vertices so we can update them in a thread
         this.m_vertices = m_terrainMeshFilter.mesh.vertices;
     }
 
+    
     //If we are updating the square from outside of a thread 
     public void MoveSea(Vector3 oceanPos, float timeSinceStart)
     {
@@ -98,20 +99,22 @@ public class WaterSquare
 
         m_terrainMeshFilter.mesh.RecalculateNormals();
     }
+    
 
     //Generate the water mesh
     public void GenerateMesh()
     {
         //Vertices
         List<Vector3[]> verts = new List<Vector3[]>();
-        //Triangles
-        List<int> tris = new List<int>();
+
         //Texturing
-        //List<Vector2> uvs = new List<Vector2>();
+        List<Vector2> uvs = new List<Vector2>();
+
+        //Triangles
+        List<int> tris = new List<int>();        
 
         for (int z = 0; z < m_width; z++)
         {
-
             verts.Add(new Vector3[m_width]);
 
             for (int x = 0; x < m_width; x++)
@@ -125,7 +128,8 @@ public class WaterSquare
 
                 verts[z][x] = current_point;
 
-                //uvs.Add(new Vector2(x,z));
+                //uvs.Add(new Vector2(x, z));
+                uvs.Add(new Vector2((float)x / (float)m_width, (float)z / (float)m_width));
 
                 //Don't generate a triangle the first coordinate on each row
                 //Because that's just one point
@@ -154,7 +158,7 @@ public class WaterSquare
         int i = 0;
         foreach (Vector3[] v in verts)
         {
-            //Copies all the elements of the current 1D-array to the specified 1D-array
+            //Copies all the elements of the current 2D-array to the specified 1D-array
             v.CopyTo(unfolded_verts, i * m_width);
 
             i++;
@@ -163,7 +167,7 @@ public class WaterSquare
         //Generate the mesh object
         Mesh newMesh = new Mesh();
         newMesh.vertices = unfolded_verts;
-        //newMesh.uv = uvs.ToArray();
+        newMesh.uv = uvs.ToArray();
         newMesh.triangles = tris.ToArray();
 
         //Ensure the bounding volume is correct
@@ -171,12 +175,11 @@ public class WaterSquare
         //Update the normals to reflect the change
         newMesh.RecalculateNormals();
 
-
         //Add the generated mesh to this GameObject
         m_terrainMeshFilter.mesh.Clear();
         m_terrainMeshFilter.mesh = newMesh;
         m_terrainMeshFilter.mesh.name = "Water Mesh";
 
-        Debug.Log(m_terrainMeshFilter.mesh.vertices.Length);
+        //Debug.Log(m_terrainMeshFilter.mesh.vertices.Length);
     }
 }
