@@ -103,7 +103,7 @@ namespace BoatSpace
                 //And if we want to debug we can convert it back to local
                 m_boatVerticesGlobal[j] = globalPos;
 
-                m_allDistancesToWater[j] = WaterController.current.DistanceToWater(globalPos, m_timeSinceStart);
+                m_allDistancesToWater[j] = WaterController.m_current.DistanceToWater(globalPos, m_timeSinceStart);
             }
 
             //Add the triangles

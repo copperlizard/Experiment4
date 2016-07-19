@@ -86,7 +86,7 @@ public class WaterSquare
             }
 
             //Get the water height at this coordinate
-            vertex.y = WaterController.current.GetWaveYPos(vertexGlobal, timeSinceStart);
+            vertex.y = WaterController.m_current.GetWaveYPos(vertexGlobal, timeSinceStart);
 
             //From global to local - not needed if we use the saved local x,z position
             //vertices[i] = transform.InverseTransformPoint(vertex);
@@ -124,7 +124,7 @@ public class WaterSquare
                 //Get the corrdinates of the vertice
                 current_point.x = x * m_spacing;
                 current_point.z = z * m_spacing;
-                current_point.y = m_squareTransform.position.y;
+                current_point.y = m_squareTransform.position.y;                
 
                 verts[z][x] = current_point;
 

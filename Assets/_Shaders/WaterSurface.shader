@@ -15,6 +15,8 @@
 		Tags{ "Queue" = "Transparent" "RenderType" = "Transparent" }
 		Blend SrcAlpha OneMinusSrcAlpha
 		ColorMask RGB
+		Cull Off
+		ZWrite Off
 		LOD 200			
 
 		CGPROGRAM
@@ -49,7 +51,7 @@
 		};
 
 		//The wave function
-		float3 getWavePos(float3 pos)
+		float3 getWavePos(float3 pos, float2 uv)
 		{
 			pos.y = 0.0;
 
@@ -58,8 +60,12 @@
 			pos.y += sin((_WaterTime * _WaterSpeed + waveType) / _WaterDistance) * _WaterScale;
 
 			//Add noise
-			pos.y += tex2Dlod(_NoiseTex, float4(pos.x, pos.z + sin(_WaterTime * 0.1), 0.0, 0.0) * _WaterNoiseWalk).a * _WaterNoiseStrength;
+			//pos.y += tex2Dlod(_NoiseTex, float4(pos.x, pos.z + sin(_WaterTime * 0.1), 0.0, 0.0) * _WaterNoiseWalk).a * _WaterNoiseStrength;	
 
+			//pos.y += tex2Dlod(_NoiseTex, float4(uv, 0.0f, 0.0f)).a * _WaterNoiseStrength;
+
+			//SWITCH TO [0..1] COORDINATE SPACE FOR NOISE SAMPLE!!!
+			
 			return pos;
 		}
 
@@ -69,7 +75,7 @@
 			float4 worldPos = mul(_Object2World, IN.vertex);
 
 			//Manipulate the position
-			float3 withWave = getWavePos(worldPos.xyz);
+			float3 withWave = getWavePos(worldPos.xyz, IN.texcoord.xy);
 
 			//Convert the position back to local
 			float4 localPos = mul(_World2Object, float4(withWave, worldPos.w));
@@ -81,7 +87,7 @@
 		void surf(Input IN, inout SurfaceOutputStandard o)
 		{
 			//Albedo comes from a texture tinted by color
-			fixed4 c = tex2D(_MainTex, IN.uv_MainTex + float2(_WaterTime * 0.001f, _WaterTime * 0.001f * cos(_WaterTime * 0.01f))) * _Color;
+			fixed4 c = tex2D(_MainTex, IN.uv_MainTex + float2(_WaterTime * _WaterSpeed * 0.001f, _WaterTime * _WaterSpeed * 0.001f * cos(_WaterTime * _WaterSpeed * 0.01f))) * _Color;
 			o.Albedo = c.rgb;
 			//Metallic and smoothness come from slider variables
 			o.Metallic = _Metallic;

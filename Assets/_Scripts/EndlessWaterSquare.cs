@@ -45,17 +45,14 @@ public class EndlessWaterSquare : MonoBehaviour
         UpdateWater();
         
         //Update the time since start to get correct wave height which depends on time since start
-        m_secondsSinceStart = Time.time;
-
-        //Update the position of the boat to see if we should move the water
-        m_boatPos = m_boatObj.transform.position;
+        m_secondsSinceStart = Time.time;        
     }
 
     //Update the water 
     void UpdateWater()
     {
         //Update the position of the boat
-        m_boatPos = m_boatObj.transform.position;
+        //m_boatPos = m_boatObj.transform.position;
 
         //Move the water to the boat
         MoveWaterToBoat();
@@ -63,12 +60,13 @@ public class EndlessWaterSquare : MonoBehaviour
         //Add the new position of the ocean to this transform
         transform.position = m_oceanPos;
         
+        /*
         //Update the vertices
         for (int i = 0; i < m_waterSquares.Count; i++)
         {
             m_waterSquares[i].MoveSea(m_oceanPos, Time.time);
         }
-        
+        */
     }
 
     //Move the endless water to the boat's position in steps that's the same as the water's resolution
@@ -104,7 +102,7 @@ public class EndlessWaterSquare : MonoBehaviour
                 }
 
                 //The y-Pos should be lower than the square with high resolution to avoid an ugly seam
-                float yPos = -200.0f;
+                float yPos = -2.0f;
                 AddWaterPlane(x * m_squareWidth, z * m_squareWidth, yPos, m_squareWidth, m_outerSquareResolution);
             }
         }
@@ -121,10 +119,17 @@ public class EndlessWaterSquare : MonoBehaviour
         centerPos.y = yPos;
         centerPos.z += zCoord;
 
-        GameObject waterPlane = Instantiate(m_waterSqrObj, centerPos, transform.rotation) as GameObject;
+        //GameObject waterPlane = Instantiate(m_waterSqrObj, centerPos, transform.rotation) as GameObject;
+        GameObject waterPlane = Instantiate(m_waterSqrObj) as GameObject;
 
-        waterPlane.SetActive(true);        
-                
+        waterPlane.SetActive(true);
+
+        //Debug.Log("New plane Instantiated at " + waterPlane.transform.position.ToString() + " with rotation " + waterPlane.transform.rotation.ToString());
+
+        waterPlane.transform.position = centerPos;
+        
+        //Debug.Log("New plane moved to " + waterPlane.transform.position.ToString() + " with rotation " + waterPlane.transform.rotation.ToString());
+        
         //Parent it
         waterPlane.transform.parent = transform;
 

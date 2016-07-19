@@ -44,7 +44,7 @@ namespace BoatSpace
             this.center = (p1 + p2 + p3) / 3f;
 
             //Distance to the surface from the center of the triangle
-            this.distanceToSurface = Mathf.Abs(WaterController.current.DistanceToWater(this.center, timeSinceStart));
+            this.distanceToSurface = Mathf.Abs(WaterController.m_current.DistanceToWater(this.center, timeSinceStart));
 
             //Normal to the triangle
             this.normal = Vector3.Cross(p2 - p1, p3 - p1).normalized;
