@@ -50,10 +50,10 @@ namespace BoatSpace
             m_modifyBoatMesh.GenerateUnderwaterMesh();
 
             //Display the under water mesh - is always needed to get the underwater length for forces calculations
-            m_modifyBoatMesh.DisplayMesh(m_underWaterMesh, "UnderWater Mesh", m_modifyBoatMesh.m_underWaterTriangleData);
+            //m_modifyBoatMesh.DisplayMesh(m_underWaterMesh, "UnderWater Mesh", m_modifyBoatMesh.m_underWaterTriangleData);
 
             //Display the above water mesh
-            m_modifyBoatMesh.DisplayMesh(m_aboveWaterMesh, "AboveWater Mesh", m_modifyBoatMesh.m_aboveWaterTriangleData);
+            //m_modifyBoatMesh.DisplayMesh(m_aboveWaterMesh, "AboveWater Mesh", m_modifyBoatMesh.m_aboveWaterTriangleData);
         }
 
         void FixedUpdate()
