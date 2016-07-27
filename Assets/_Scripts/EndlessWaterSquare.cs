@@ -42,23 +42,26 @@ public class EndlessWaterSquare : MonoBehaviour
 
     void Update()
     {
-        UpdateWater();
-        
         //Update the time since start to get correct wave height which depends on time since start
-        m_secondsSinceStart = Time.time;        
+        m_secondsSinceStart = Time.time;
+
+        UpdateWater();
     }
 
     //Update the water 
     void UpdateWater()
     {
         //Update the position of the boat
-        //m_boatPos = m_boatObj.transform.position;
+        m_boatPos = m_boatObj.transform.position;
 
         //Move the water to the boat
-        MoveWaterToBoat();
+        //MoveWaterToBoat();
+        m_oceanPos = new Vector3(m_boatPos.x, m_oceanPos.y, m_boatPos.z);
 
         //Add the new position of the ocean to this transform
         transform.position = m_oceanPos;
+
+        WaterController.m_current.m_oceanCenterPos = new Vector4(m_oceanPos.x, m_oceanPos.y, m_oceanPos.z, 0.0f);
         
         /*
         //Update the vertices
@@ -67,6 +70,7 @@ public class EndlessWaterSquare : MonoBehaviour
             m_waterSquares[i].MoveSea(m_oceanPos, Time.time);
         }
         */
+                
     }
 
     //Move the endless water to the boat's position in steps that's the same as the water's resolution
@@ -79,7 +83,7 @@ public class EndlessWaterSquare : MonoBehaviour
         //Should we move the water?
         if (m_oceanPos.x != x || m_oceanPos.z != z)
         {
-            //Debug.Log("Moved sea");
+            Debug.Log("Moved sea");
             m_oceanPos = new Vector3(x, m_oceanPos.y, z);
         }
     }
@@ -102,7 +106,7 @@ public class EndlessWaterSquare : MonoBehaviour
                 }
 
                 //The y-Pos should be lower than the square with high resolution to avoid an ugly seam
-                float yPos = -2.0f;
+                float yPos = -0.5f;
                 AddWaterPlane(x * m_squareWidth, z * m_squareWidth, yPos, m_squareWidth, m_outerSquareResolution);
             }
         }

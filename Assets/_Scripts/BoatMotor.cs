@@ -24,7 +24,7 @@ public class BoatMotor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        
     }    
 
     public void Move(float h, float v)
@@ -36,7 +36,7 @@ public class BoatMotor : MonoBehaviour
         if (m_forwardAmount > 0.0f)
         {
             // Rotate input to match camera
-            move = Quaternion.Euler(0.0f, m_cam.transform.eulerAngles.y, 0.0f) * move;
+            move = Quaternion.Euler(0.0f, m_cam.transform.eulerAngles.y - transform.eulerAngles.y, 0.0f) * move;
 
             // Look "forward"
             Quaternion lookRot = Quaternion.LookRotation(move);
@@ -50,6 +50,7 @@ public class BoatMotor : MonoBehaviour
 
         float turn = m_turnTarAng - transform.localRotation.eulerAngles.y;
 
+        /*
         if (Mathf.Abs(turn) > 180.0f)
         {
             if (transform.rotation.eulerAngles.y < m_turnTarAng)
@@ -62,13 +63,22 @@ public class BoatMotor : MonoBehaviour
             }
         }
         turn /= 180.0f;
+        */
 
-        Debug.Log("turn == " + turn.ToString());        
+        //Debug.Log("turn == " + turn.ToString());
 
-        float turnSpeed = Mathf.Lerp(m_stationaryTurnSpeed, m_movingTurnSpeed, m_forwardAmount);
-        //transform.Rotate(0, turn * turnSpeed * Time.deltaTime, 0);
-        transform.Rotate(Vector3.up, turn * turnSpeed * Time.deltaTime);
+        Vector3 heading = Quaternion.Euler(0.0f, turn, 0.0f) * (transform.forward * m_forwardAmount);
+        heading = transform.InverseTransformVector(heading);
 
-        m_boatRB.AddForceAtPosition(transform.forward * m_motorPower * m_forwardAmount, transform.TransformPoint(transform.position));    
+        Vector3 force = new Vector3(heading.x, heading.y, -heading.z) * m_motorPower * Time.deltaTime;
+        //Vector3 force = Quaternion.Euler(0.0f, 180.0f, 0.0f) * heading * m_motorPower * Time.deltaTime;
+        force = transform.TransformVector(force);
+
+        //Debug.DrawLine(transform.TransformPoint(transform.position), transform.TransformPoint(transform.position) + (transform.forward * m_motorPower * m_forwardAmount), Color.red, 0.1f, false);
+        Debug.DrawLine(transform.position, transform.position + (transform.forward * 2.0f * m_forwardAmount), Color.red, 0.1f, false);
+        Debug.DrawLine(transform.position, transform.position + heading * 5.0f, Color.blue, 0.1f, false);
+        Debug.DrawLine(transform.position, transform.position + force, Color.yellow, 0.1f, false);
+
+        m_boatRB.AddForceAtPosition(-force, transform.position);    
     }
 }

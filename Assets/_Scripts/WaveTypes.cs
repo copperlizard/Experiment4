@@ -178,12 +178,12 @@ public class WaveTypes
 
         float waveType = z;
 
-        y += Mathf.Sin((timeSinceStart * speed + waveType) / waveDistance) * scale;
+        y += Mathf.Sin((-(timeSinceStart) * speed + waveType) / (waveDistance * 1.7f)) * scale;
 
         //Add noise to make it more realistic
         //y += Mathf.PerlinNoise(x + noiseWalk, y + Mathf.Sin(timeSinceStart * 0.1f)) * noiseStrength;
 
-        y += cnoise(new Vector2(position.x, position.y) * 30.0f + new Vector2(timeSinceStart * 0.01f, timeSinceStart * 0.01f * Mathf.Cos(timeSinceStart * 0.05f)) * noiseWalk) * noiseStrength;
+        //y += cnoise(new Vector2(position.x, position.y) * 30.0f + new Vector2(timeSinceStart * 0.01f, timeSinceStart * 0.01f * Mathf.Cos(timeSinceStart * 0.05f)) * noiseWalk) * noiseStrength;
 
         return y;
     }

@@ -8,6 +8,9 @@ public class WaterController : MonoBehaviour
 
     public bool m_isMoving;
 
+    [HideInInspector]
+    public Vector4 m_oceanCenterPos;
+
     //Wave height and speed
     public float m_scale = 0.1f;
     public float m_speed = 1.0f;
@@ -16,6 +19,8 @@ public class WaterController : MonoBehaviour
     //Noise parameters
     public float m_noiseStrength = 1f;
     public float m_noiseWalk = 1f;
+
+    private Mesh m_mesh;
 
     void Start()
     {
@@ -26,10 +31,17 @@ public class WaterController : MonoBehaviour
             m_scale = 0.0f;
             m_speed = 0.0f;
         }
+
+        m_mesh = GetComponent<MeshFilter>().mesh;
     }
 
     void Update()
-    {       
+    {
+        Vector4 bounds = new Vector4(m_mesh.bounds.size.x, m_mesh.bounds.size.y, m_mesh.bounds.size.z, 0.0f);
+
+        Shader.SetGlobalVector("_WaterCenterPos", m_oceanCenterPos);
+        Shader.SetGlobalVector("_WaterBounds", bounds);
+               
         Shader.SetGlobalFloat("_WaterScale", m_scale);
         Shader.SetGlobalFloat("_WaterSpeed", m_speed);
         Shader.SetGlobalFloat("_WaterDistance", m_waveDistance);
@@ -43,7 +55,7 @@ public class WaterController : MonoBehaviour
     {
         if (m_isMoving)
         {
-            return WaveTypes.SinXWave(position, m_speed, m_scale, m_waveDistance, m_noiseStrength, m_noiseWalk, timeSinceStart);
+            return WaveTypes.SinXWave(position - new Vector3(m_oceanCenterPos.x, m_oceanCenterPos.y, m_oceanCenterPos.z), m_speed, m_scale, m_waveDistance, m_noiseStrength, m_noiseWalk, timeSinceStart);
         }
         else
         {
