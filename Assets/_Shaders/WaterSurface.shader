@@ -123,15 +123,13 @@
 			pos.y = 0.0;
 
 			float waveType = uv.y * _WaterBounds.z;
-			//float waveType = pos.z;
-			//float waveType = uv.y * _WaterBounds.z - _WaterCenterPos.z; //pos.z;
-
+			
 			pos.y += sin((_WaterTime * _WaterSpeed + waveType) / _WaterDistance) * _WaterScale;
 
-			//Add noise
-			//pos.y += tex2Dlod(_NoiseTex, float4(pos.x, pos.z + sin(_WaterTime * 0.1), 0.0, 0.0) * _WaterNoiseWalk).a * _WaterNoiseStrength;			
-
-			//pos.y += cnoise(uv * 30.0 + float2(_WaterTime * 0.01, _WaterTime * 0.01 * cos(_WaterTime  * 0.05)) * _WaterNoiseWalk) * _WaterNoiseStrength;
+			//Add wave noise
+			pos.y += cnoise(uv * 30.0 + float2(_WaterTime * 0.01, _WaterTime * 0.01 * cos(_WaterTime  * 0.05)) * _WaterNoiseWalk) * _WaterNoiseStrength;
+			
+			//pos.y += tex2Dlod(_NoiseTex, float4(uv.x * 500.0, uv.y * 500.0 + sin(_WaterTime * 0.1), 0.0, 0.0) * _WaterNoiseWalk).a * 0.5;
 			
 			return pos;
 		}
@@ -156,10 +154,10 @@
 		void surf(Input IN, inout SurfaceOutputStandard o)
 		{
 			//Albedo comes from a texture tinted by color
-			//fixed4 c = tex2D(_MainTex, IN.uv_MainTex + float2(_WaterTime * _WaterSpeed * 0.001f, _WaterTime * _WaterSpeed * 0.001f * cos(_WaterTime * _WaterSpeed * 0.01f))) * _Color;
-			fixed4 c = tex2D(_MainTex, (IN.worldPos.xz * 0.001f) + float2(_WaterTime * _WaterSpeed * 0.001f, _WaterTime * _WaterSpeed * 0.001f * cos(_WaterTime * _WaterSpeed * 0.01f))) * _Color;
-			//fixed4 c = _Color;
-
+			fixed4 c = tex2D(_MainTex, (IN.worldPos.xz * 0.001f) + float2(0.0, -_WaterTime * _WaterSpeed * 0.001f)) * _Color;
+			
+			/*
+			//Draw debug grid
 			float xdist = IN.worldPos.x - floor(IN.worldPos.x);
 			float zdist = IN.worldPos.z - floor(IN.worldPos.z);
 			if (xdist < 0.0)
@@ -181,12 +179,14 @@
 			{
 				c *= 0.0;
 			}
+			*/
 
+			//Set output
 			o.Albedo = c.rgb;
+			o.Alpha = c.a;
 			//Metallic and smoothness come from slider variables
 			o.Metallic = _Metallic;
-			o.Smoothness = _Glossiness;
-			o.Alpha = c.a;
+			o.Smoothness = _Glossiness;			
 		}		
 
 		ENDCG
